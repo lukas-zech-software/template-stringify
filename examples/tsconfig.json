@@ -1,0 +1,11 @@
+{
+  "files": ["**/*.ts"],
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "esnext",
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
