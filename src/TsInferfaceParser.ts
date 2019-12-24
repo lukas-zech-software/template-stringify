@@ -1,8 +1,8 @@
 import * as ts from "typescript";
 import { SyntaxKind } from "typescript";
 
-export type ParseResult<T>={
-    _:T;
+export type ParseResult<T> = {
+    _: T;
 };
 
 export class TsInferfaceParser<T = any> {
@@ -10,18 +10,21 @@ export class TsInferfaceParser<T = any> {
     private typeChecker: ts.TypeChecker;
     private baseInterface: ts.InterfaceDeclaration;
 
-    constructor(private fileName) {
+    constructor(private fileName: string) {
         this.json = '{'
 
 
         const config: ts.CompilerOptions = {
             noResolve: true,
             target: ts.ScriptTarget.ES5,
-        }
+        };
 
         const program = ts.createProgram([this.fileName], config)
 
-        const ast = program.getSourceFile(this.fileName)
+        const ast = program.getSourceFile(this.fileName);
+        if (ast === undefined) {
+            throw new Error('Could not load file ' + fileName)
+        }
         this.baseInterface = ast
             .getChildAt(0)
             .getChildren()
@@ -49,7 +52,7 @@ export class TsInferfaceParser<T = any> {
     }
 
 
-    private getSampleData(type) {
+    private getSampleData(type: string) {
         switch (type) {
             case 'number':
                 return 0;
@@ -79,7 +82,7 @@ export class TsInferfaceParser<T = any> {
         }
 
         if (node.kind === SyntaxKind.TupleType) {
-            node.elementTypes.forEach((elementNode) => {
+            node.elementTypes.forEach((elementNode: any) => {
                 this.fn2(elementNode)
             })
         }

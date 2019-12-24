@@ -6,46 +6,64 @@ function getProp(obj, path, objName = 'obj') {
     let args = `return ${path};`;
     return new Function(...[objName], args)(obj);
 }
+/**
+ * A prebuilt template to stringify specific type of objects way faster
+ * than generic methods like `JSON.stringify` can
+ */
 class JsonTemplate {
-    constructor(parent, depth = 0) {
-        this.parent = parent;
-        this.depth = depth;
+    constructor(templateObject, recursiveOptions) {
+        this.templateObject = templateObject;
+        this.recursiveOptions = recursiveOptions;
+        this.template = '';
         this.fns = [];
-        this.innerTemplateCache = new Map();
         this.charId = 35;
         this.charMap = {};
         this.afterFns = [];
+        this.templateFn = this.build();
     }
     addValueArray(key, path) {
-        this.fns.push((obj) => {
+        this.fns.push(() => {
+            if (isNaN(parseInt(key)) === false) {
+                this.template += `[\$\{${path}["${key}"].join(',')\}]`;
+                return;
+            }
             this.template += `"${key}":[\$\{${path}["${key}"].join(',')\}]`;
         });
     }
     addObject(key, path) {
         this.fns.push((obj, basePath) => {
             const isArray = Array.isArray(obj) === true;
-            let parent = this.parent || this;
+            const parent = this.recursiveOptions ? this.recursiveOptions.parent : this;
             if (isArray) {
                 const id = `"|${tId++}|"`;
                 parent.afterFns.push({
                     id,
-                    basePath,
+                    basePath: basePath,
                     fn: (obj2) => {
-                        const xxx = getProp(obj2, basePath);
-                        return xxx.map((x, i) => {
-                            const innerTemplate = new JsonTemplate(parent, this.depth + 1);
-                            innerTemplate.build(x, `${basePath}[${i}]`);
+                        if (basePath === undefined) {
+                            throw new Error('BasePath necessary for nested objects');
+                        }
+                        const data = getProp(obj2, basePath);
+                        return data.map((x, i) => {
+                            const innerTemplate = new JsonTemplate(x, {
+                                basePath: `${basePath}[${i}]`,
+                                parent,
+                                depth: this.recursiveOptions ? this.recursiveOptions.depth + 1 : 0
+                            });
                             return innerTemplate.stringify(obj2);
                         }).join(',');
                     }
                 });
                 return this.template += id;
             }
-            const t = new JsonTemplate(parent, this.depth + 1);
-            let innerObj = obj[key];
-            t.build(innerObj, `${path}["${key}"]`);
-            let template = t.getTemplate();
-            return this.template += `"${key}":${template}`;
+            const innerObj = obj[key];
+            const t = new JsonTemplate(innerObj, {
+                basePath: `${path}["${key}"]`,
+                parent,
+                depth: this.recursiveOptions ? this.recursiveOptions.depth + 1 : 0,
+            });
+            const texTemplate = t.getTemplate();
+            return this.template += `"${key}":${texTemplate}`;
         });
     }
     addString(key, path) {
@@ -61,19 +79,19 @@ class JsonTemplate {
     fn2(value, key, path = 'obj') {
         switch (typeof value) {
             case "object": {
-                if (value === null) {
+                if (value === null || value === undefined) {
                     this.addNumberOrBoolean(key, path);
                     break;
                 }
                 if (Array.isArray(value)) {
                     if (typeof value[0] === 'object') {
-                        this.fn2(value[0], key, path);
+                        this.addObject(key, path);
                         break;
                     }
                     this.addValueArray(key, path);
                     break;
                 }
-                if (this.depth > 3 && isCyclic(value)) {
+                if ((this.recursiveOptions ? this.recursiveOptions.depth : 0) >= 3 && isCyclic(value)) {
                     this.template += `"${key}":"[CIRCULAR]"`;
                     break;
                 }
@@ -86,19 +104,20 @@ class JsonTemplate {
             }
             case "number":
             case "boolean":
-            case 'undefined':
             case "bigint": {
                 this.addNumberOrBoolean(key, path);
                 break;
             }
             case "function":
             case 'symbol':
+            case 'undefined':
             default: {
                 break;
             }
         }
     }
     create(obj, basePath) {
+        //const keys = Object.keys(obj);
         for (let key in obj) {
             let value = obj[key];
             this.fn2(value, key, basePath);
@@ -112,17 +131,18 @@ class JsonTemplate {
         let args = `return \`${str}\`;`;
         return new Function(...['obj', 'JsonTemplate'], args);
     }
-    build(obj, basePath) {
-        const isArray = Array.isArray(obj);
+    build() {
+        const isArray = Array.isArray(this.templateObject);
+        const basePath = this.recursiveOptions ? this.recursiveOptions.basePath : undefined;
         if (isArray) {
             this.template = '[';
         }
         else {
             this.template = '{';
         }
-        this.create(obj, basePath);
+        this.create(this.templateObject, basePath);
         this.fns.forEach((fn, i) => {
-            fn(obj, basePath);
+            fn(this.templateObject, basePath);
             if (i !== this.fns.length - 1) {
                 this.template += ',';
             }
@@ -133,13 +153,20 @@ class JsonTemplate {
         else {
             this.template += '}';
         }
-        this.templateFn = this._renderFactory(this.template);
+        return this._renderFactory(this.template);
     }
+    /**
+     * Get the current string template
+     */
     getTemplate() {
         return this.template;
     }
+    /**
+     * Stringify the passed object with the prebuilt template
+     * @param obj
+     */
     stringify(obj) {
-        let stringify = this.templateFn(obj, undefined);
+        let stringify = this.templateFn(obj);
         const previous = [...this.afterFns];
         this.afterFns = [];
         previous.forEach(({ fn, id }, i) => {
@@ -152,6 +179,10 @@ class JsonTemplate {
         });
         return stringify;
     }
+    /**
+     * Parse a provided obejct
+     * @param str
+     */
     parse(str) {
         //Object.entries(this.charMap).forEach(([key, char]) => {
         //    str = str.replace(new RegExp(`"\\${char}"`, 'g'), `"${key}"`)

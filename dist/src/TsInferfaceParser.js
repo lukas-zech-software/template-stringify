@@ -12,6 +12,9 @@ class TsInferfaceParser {
         };
         const program = ts.createProgram([this.fileName], config);
         const ast = program.getSourceFile(this.fileName);
+        if (ast === undefined) {
+            throw new Error('Could not load file ' + fileName);
+        }
         this.baseInterface = ast
             .getChildAt(0)
             .getChildren()

@@ -1,28 +1,26 @@
 {
-  "name": "fast-stringify",
-  "version": "0.0.1",
+  "name": "template-stringify",
+  "version": "0.0.1-alpha",
   "description": "",
-  "main": "dist/JsonTemplate.ja",
+  "main": "dist/JsonTemplate.ts",
   "scripts": {
-    "benchmark": "matcha dist/spec/benchmark.js",
-    "test": "jasmine-node dist/spec/**/*.spec.js",
+    "benchmark": "npm run build && matcha dist/spec/benchmark.js",
+    "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "build": "tsc"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "fast-safe-stringify": "^2.0.7",
-    "kelonio": "^0.3.0",
-    "lodash.isequal": "^4.5.0",
-    "lodash.memoize": "^4.1.2",
-    "ts-node": "^8.5.4"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "fast-safe-stringify": "^2.0.7",
+    "lodash.isequal": "^4.5.0",
     "@types/jasmine": "^3.5.0",
+    "@types/lodash.isequal": "^4.5.5",
     "@types/node": "^12.12.17",
-    "jasmine-node": "^3.0.0",
+    "jasmine": "^3.5.0",
     "lodash": "^4.17.15",
     "matcha": "^0.7.0",
+    "ts-node": "^8.5.4",
     "typescript": "^3.7.3"
   }
 }

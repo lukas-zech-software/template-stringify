@@ -7,50 +7,77 @@ function getProp(obj: any, path: string, objName = 'obj'): any {
 
 }
 
-export class JsonTemplate<T = any> {
+/**
+ * Inner options passed to the template constructor on recursive calls
+ */
+interface RecursiveOptions<T> {
+    basePath?: string
+    parent: JsonTemplate<T>,
+    depth: number,
+}
+
+type TemplateFunction<T> = (obj: T) => string;
+
+/**
+ * A prebuilt template to stringify specific type of objects way faster
+ * than generic methods like `JSON.stringify` can
+ */
+export class JsonTemplate<T> {
+    /**
+     * Last char id used to minify the output
+     *
+     */
     private charId: number;
     private charMap: { [index: string]: string };
-    private templateFn: (obj: T, bla: any) => string;
-    private template: string;
-    private fns: Array<(obj: T, basePath?: string) => any> = []
+    private templateFn: TemplateFunction<T>;
+    private template: string = '';
+    private fns: Array<(obj: T, basePath?: string) => any> = [];
     private afterFns: Array<{
         id: string,
-        basePath: string,
+        basePath?: string,
         fn: (obj: any, basePath?: string) => any,
     }>;
-    private innerTemplateCache: Map<string, JsonTemplate> = new Map();
 
-    constructor(private parent?: JsonTemplate, private depth = 0) {
+    constructor(private templateObject: T, private recursiveOptions?: RecursiveOptions<T>) {
         this.charId = 35;
         this.charMap = {};
         this.afterFns = [];
+
+        this.templateFn = this.build()
     }
 
-    private addValueArray(key, path) {
-        this.fns.push((obj) => {
+    private addValueArray(key: string, path: string): void {
+        this.fns.push(() => {
+            if (isNaN(parseInt(key)) === false) {
+                this.template += `[\$\{${path}["${key}"].join(',')\}]`;
+                return;
+            }
             this.template += `"${key}":[\$\{${path}["${key}"].join(',')\}]`
         });
     }
 
-    private addObject(key, path) {
+    private addObject(key: string, path: string) {
         this.fns.push((obj, basePath) => {
-
             const isArray = Array.isArray(obj) === true;
-
-            let parent = this.parent || this;
+            const parent = this.recursiveOptions ? this.recursiveOptions.parent : this;
 
             if (isArray) {
                 const id = `"|${tId++}|"`;
                 parent.afterFns.push({
                     id,
-                    basePath,
+                    basePath: basePath,
                     fn: (obj2) => {
-                        const xxx = getProp(obj2, basePath);
+                        if (basePath === undefined) {
+                            throw new Error('BasePath necessary for nested objects')
+                        }
+                        const data = getProp(obj2, basePath);
 
-                        return xxx.map((x, i) => {
-                            const innerTemplate = new JsonTemplate(parent, this.depth + 1);
-                            innerTemplate.build(x, `${basePath}[${i}]`);
-
+                        return data.map((x: any, i: number) => {
+                            const innerTemplate = new JsonTemplate(x, {
+                                basePath: `${basePath}[${i}]`,
+                                parent,
+                                depth: this.recursiveOptions ? this.recursiveOptions.depth + 1 : 0
+                            });
 
                             return innerTemplate.stringify(obj2);
                         }).join(',');
@@ -58,43 +85,43 @@ export class JsonTemplate<T = any> {
                 });
 
                 return this.template += id;
-
             }
 
-            const t = new JsonTemplate(parent, this.depth + 1);
+            const innerObj = (obj as any)[key];
+            const t = new JsonTemplate(innerObj, {
+                basePath: `${path}["${key}"]`,
+                parent,
+                depth: this.recursiveOptions ? this.recursiveOptions.depth + 1 : 0,
+            });
+            const texTemplate = t.getTemplate();
 
-            let innerObj = obj[key];
-            t.build(innerObj, `${path}["${key}"]`);
-            let template = t.getTemplate();
-
-
-            return this.template += `"${key}":${template}`;
+            return this.template += `"${key}":${texTemplate}`;
         });
     }
 
-    private addString(key, path) {
+    private addString(key: string, path: string) {
         this.fns.push(() => {
             return this.template += `"${key}":"\$\{${path}['${key}']\}"`;
         });
     }
 
-    private addNumberOrBoolean(key, path) {
+    private addNumberOrBoolean(key: string, path: string) {
         this.fns.push(() => {
             return this.template += `"${key}":\$\{${path}['${key}']\}`;
         });
     }
 
-    private fn2(value, key, path = 'obj') {
+    private fn2(value: any, key: string, path: string = 'obj') {
         switch (typeof value) {
             case "object": {
-                if (value === null) {
+                if (value === null || value === undefined) {
                     this.addNumberOrBoolean(key, path);
                     break
                 }
 
                 if (Array.isArray(value)) {
                     if (typeof value[0] === 'object') {
-                        this.fn2(value[0], key, path);
+                        this.addObject(key, path);
                         break;
                     }
 
@@ -102,7 +129,7 @@ export class JsonTemplate<T = any> {
                     break
                 }
 
-                if (this.depth > 3 && isCyclic(value)) {
+                if ((this.recursiveOptions ? this.recursiveOptions.depth : 0) >= 3 && isCyclic(value)) {
                     this.template += `"${key}":"[CIRCULAR]"`;
 
                     break
@@ -120,7 +147,6 @@ export class JsonTemplate<T = any> {
 
             case "number":
             case "boolean":
-            case 'undefined':
             case "bigint": {
                 this.addNumberOrBoolean(key, path);
                 break;
@@ -128,6 +154,7 @@ export class JsonTemplate<T = any> {
 
             case "function":
             case 'symbol':
+            case 'undefined':
             default : {
                 break;
             }
@@ -136,10 +163,11 @@ export class JsonTemplate<T = any> {
 
     }
 
-    private create(obj, basePath?: string) {
+    private create(obj: T, basePath?: string) {
+        //const keys = Object.keys(obj);
         for (let key in obj) {
             let value = obj[key];
-            this.fn2(value, key, basePath)
+            this.fn2(value, key, basePath);
             if (isNaN(parseInt(key)) === false) {
                 //if key is numeric its an array and we only need the first element
                 return;
@@ -147,23 +175,25 @@ export class JsonTemplate<T = any> {
         }
     }
 
-    private _renderFactory(str): (obj: T) => string {
+    private _renderFactory(str: string): (obj: T) => string {
         let args = `return \`${str}\`;`;
         return new Function(...['obj', 'JsonTemplate'], args) as (obj: T) => string;
     }
 
-    build(obj: T, basePath?: string) {
-        const isArray = Array.isArray(obj);
+    private build(): TemplateFunction<T> {
+        const isArray = Array.isArray(this.templateObject);
+        const basePath = this.recursiveOptions ? this.recursiveOptions.basePath : undefined
+
         if (isArray) {
             this.template = '[';
         } else {
             this.template = '{';
         }
 
-        this.create(obj, basePath);
+        this.create(this.templateObject, basePath);
 
         this.fns.forEach((fn, i) => {
-            fn(obj, basePath);
+            fn(this.templateObject, basePath);
             if (i !== this.fns.length - 1) {
                 this.template += ',';
             }
@@ -175,15 +205,22 @@ export class JsonTemplate<T = any> {
             this.template += '}';
         }
 
-        this.templateFn = this._renderFactory(this.template);
+        return this._renderFactory(this.template);
     }
 
-    getTemplate() {
+    /**
+     * Get the current string template
+     */
+    public getTemplate(): string {
         return this.template;
     }
 
-    stringify(obj: T) {
-        let stringify = this.templateFn(obj, undefined);
+    /**
+     * Stringify the passed object with the prebuilt template
+     * @param obj
+     */
+    public stringify(obj: T) {
+        let stringify = this.templateFn(obj);
 
         const previous = [...this.afterFns];
         this.afterFns = [];
@@ -201,7 +238,11 @@ export class JsonTemplate<T = any> {
         return stringify;
     }
 
-    parse(str: string): T {
+    /**
+     * Parse a provided obejct
+     * @param str
+     */
+    public parse(str: string): T {
         //Object.entries(this.charMap).forEach(([key, char]) => {
         //    str = str.replace(new RegExp(`"\\${char}"`, 'g'), `"${key}"`)
         //});

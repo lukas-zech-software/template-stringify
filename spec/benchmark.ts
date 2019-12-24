@@ -1,10 +1,11 @@
 const fastSafeStringify = require('fast-safe-stringify');
 const {inspect} = require('util');
-const {JsonTemplate} = require('../src/JsonTemplate');
+import { JsonTemplate } from '../src/JsonTemplate';
+
 const isEqual = require('lodash.isequal');
 
 const array = new Array(10).fill(0).map((_, i) => i);
-const obj2 = {
+const testObj2 = {
     a: 1986,
     aa: 'string1',
     b: {
@@ -62,16 +63,16 @@ const obj2 = {
     },
 };
 
-const obj = {
+const testObj = {
     a: 1986,
     aa: 'string1',
     aaa: true,
     foo: array
 };
-const circ = JSON.parse(JSON.stringify(obj));
+const circ = JSON.parse(JSON.stringify(testObj));
 circ.id = Date.now();
 circ.o = {obj: circ, array};
-const circGetters = JSON.parse(JSON.stringify(obj));
+const circGetters = JSON.parse(JSON.stringify(testObj));
 Object.assign(circGetters, {
     get o() {
         return {obj: circGetters, array};
@@ -140,10 +141,10 @@ suite('util.inspect', function () {
     set('iterations', 10000);     // the number of times to run a given bench
 
     bench('util.inspect:          simple object                 ', function () {
-        inspect(obj, {showHidden: false, depth: null})
+        inspect(testObj, {showHidden: false, depth: null})
     });
     bench('util.inspect:          complex object                 ', function () {
-        inspect(obj2, {showHidden: false, depth: null})
+        inspect(testObj2, {showHidden: false, depth: null})
     });
     bench('util.inspect:          circular                      ', function () {
         inspect(circ, {showHidden: false, depth: null})
@@ -169,11 +170,11 @@ suite('fast-safe-stringify', function () {
     set('iterations', 10000);     // the number of times to run a given bench
 
     bench('fast-safe-stringify:   simple object                 ', function () {
-        fastSafeStringify(obj)
+        fastSafeStringify(testObj)
     });
 
     bench('fast-safe-stringify:   complex object                 ', function () {
-        fastSafeStringify(obj2)
+        fastSafeStringify(testObj2)
     });
     bench('fast-safe-stringify:   circular                      ', function () {
         fastSafeStringify(circ)
@@ -198,69 +199,44 @@ suite('fast-safe-stringify', function () {
 suite('templateStringify', function () {
     set('iterations', 10000);     // the number of times to run a given bench
 
-    const templateStringifyObj = new JsonTemplate();
-    templateStringifyObj.build(obj);
-    {
-        const a = templateStringifyObj.stringify(obj);
-        const x = templateStringifyObj.parse(a);
-
-        if (isEqual(obj, x) === false) {
-            throw 1
-        }
-    }
-
+    const templateStringifyObj = new JsonTemplate(testObj);
     bench('template-tringify:   simple object                 ', function () {
-        templateStringifyObj.stringify(obj);
+        templateStringifyObj.stringify(testObj);
     });
 
-    const templateStringifyObj2 = new JsonTemplate();
-    templateStringifyObj2.build(obj2);
-    {
-        const a = templateStringifyObj2.stringify(obj2);
-        const x = templateStringifyObj2.parse(a);
-
-        if (isEqual(obj2, x) === false) {
-            throw 1
-        }
-    }
+    const templateStringifyObj2 = new JsonTemplate(testObj2);
     bench('templateStringify:   complex object                 ', function () {
-        templateStringifyObj2.stringify(obj2)
+        templateStringifyObj2.stringify(testObj2)
     });
 
     const templateStringifyCirc = new JsonTemplate(circ);
-    templateStringifyCirc.build(circ);
     bench('templateStringify:   circular                      ', function () {
         templateStringifyCirc.stringify(circ)
     });
 
     const templateStringifycircGetters = new JsonTemplate(circGetters);
-    templateStringifycircGetters.build(circGetters);
     bench('templateStringify:   circular getters              ', function () {
         templateStringifycircGetters.stringify(circGetters)
     });
 
     const templateStringifydeep = new JsonTemplate(deep);
-    templateStringifydeep.build(deep);
     bench('templateStringify:   deep                          ', function () {
         templateStringifydeep.stringify(deep)
     });
 
     const templateStringifydeepCirc = new JsonTemplate(deepCirc);
-    templateStringifydeepCirc.build(deepCirc);
     bench('templateStringify:   deep circular                 ', function () {
         templateStringifydeepCirc.stringify(deepCirc)
     });
 
     const templateStringifydeepCircGetters = new JsonTemplate(deepCircGetters);
-    templateStringifydeepCircGetters.build(deepCircGetters);
     bench('templateStringify:   large deep circular getters   ', function () {
         templateStringifydeepCircGetters.stringify(deepCircGetters)
     });
 
     const templateStringifydeepCircNonCongifurableGetters = new JsonTemplate(deepCircNonCongifurableGetters);
-    templateStringifydeepCircNonCongifurableGetters.build(deepCircNonCongifurableGetters);
     bench('templateStringify:   deep non-conf circular getters', function () {
         templateStringifydeepCircNonCongifurableGetters.stringify(deepCircNonCongifurableGetters)
-    })
+    });
 
 });
