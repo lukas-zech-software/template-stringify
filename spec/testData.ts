@@ -7,7 +7,7 @@ export const testTemplateData: TestInterface = {
         bb1: false,
         bb2: 'mmm',
         bb3: {
-            bbb1: null,
+            bbb1: true,
             bbb2: ' '
         }
     },
@@ -81,7 +81,7 @@ export const testActualData: TestInterface = {
         }
     ],
     d: [
-        {dd1: 'hello void / real deal', dd2: undefined},
+        {dd1: 'hello void / real deal', dd2: true},
         {dd1: '', dd2: true},
     ],
     e: {
