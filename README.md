@@ -1,4 +1,4 @@
-![](https://github.com/actions/lukas-zech-software/template-stringify/Build/badge.svg)
+![](https://github.com/lukas-zech-software/template-stringify/workflows/Build/badge.svg)
 
 # template-stringify v0.0.1-alpha
 
@@ -10,38 +10,33 @@ This library is faster than other libraries
 
 ```bash
 Example benchmark on MacBook Pro (15-inch, 2017) 3,1 GHz Intel Core i7
-         util.inspect
-         316,521 op/s » util.inspect:          simple object
-          31,814 op/s » util.inspect:          complex object
-          95,756 op/s » util.inspect:          object arrays
-         155,845 op/s » util.inspect:          circular
-         156,027 op/s » util.inspect:          circular getters
-          20,865 op/s » util.inspect:          deep
-          19,731 op/s » util.inspect:          deep circular
-          11,169 op/s » util.inspect:          large deep circular getters
-          21,426 op/s » util.inspect:          deep non-conf circular getters
+Simple object
+utils.inspect x     291,783 ops/sec ±3.19% (79 runs sampled)
+JSON.stringify x    828,393 ops/sec ±10.54% (73 runs sampled)
+fastSafeStringify x 687,957 ops/sec ±8.17% (75 runs sampled)
+templateStringify x 2,782,517 ops/sec ±1.83% (89 runs sampled)
+Fastest for "Simple object" is templateStringify
 
-         fast-safe-stringify
-         903,967 op/s » fast-safe-stringify:   simple object
-         126,113 op/s » fast-safe-stringify:   complex object
-         336,605 op/s » fast-safe-stringify:   object arrays
-         492,251 op/s » fast-safe-stringify:   circular
-         565,351 op/s » fast-safe-stringify:   circular getters
-          61,495 op/s » fast-safe-stringify:   deep
-          58,462 op/s » fast-safe-stringify:   deep circular
-           2,346 op/s » fast-safe-stringify:   large deep circular getters
-          30,255 op/s » fast-safe-stringify:   deep non-conf circular getters
+Complex object
+utils.inspect x     32,397 ops/sec ±0.51% (93 runs sampled)
+JSON.stringify x    161,784 ops/sec ±0.73% (93 runs sampled)
+fastSafeStringify x 127,159 ops/sec ±1.15% (94 runs sampled)
+templateStringify x 3,845,886 ops/sec ±1.43% (92 runs sampled)
+Fastest for "Complex object" is templateStringify
 
-          templateStringify
-       2,236,836 op/s » template-tringify:   simple object
-       3,723,752 op/s » templateStringify:   complex object
-      86,913,523 op/s » templateStringify:   object array
-         502,633 op/s » templateStringify:   circular
-         516,284 op/s » templateStringify:   circular getters
-         455,901 op/s » templateStringify:   deep
-         158,620 op/s » templateStringify:   deep circular
-          41,498 op/s » templateStringify:   large deep circular getters
-          71,182 op/s » templateStringify:   deep non-conf circular getters
+Object array
+utils.inspect x     95,573 ops/sec ±0.49% (86 runs sampled)
+JSON.stringify x    393,325 ops/sec ±1.06% (91 runs sampled)
+fastSafeStringify x 327,904 ops/sec ±0.86% (94 runs sampled)
+templateStringify x 95,214,894 ops/sec ±0.45% (90 runs sampled)
+Fastest for "Object array" is templateStringify
+
+Deep object
+utils.inspect x     20,514 ops/sec ±0.73% (95 runs sampled)
+JSON.stringify x    74,346 ops/sec ±0.95% (92 runs sampled)
+fastSafeStringify x 59,594 ops/sec ±0.37% (97 runs sampled)
+templateStringify x 453,741 ops/sec ±0.71% (90 runs sampled)
+Fastest for "Deep object" is templateStringify
 ```
 
 Run `npm run benchmarks` for details

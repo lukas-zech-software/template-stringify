@@ -1,8 +1,8 @@
-const fastSafeStringify = require('fast-safe-stringify');
-const {inspect} = require('util');
+import * as Benchmark from 'benchmark';
 import { JsonTemplate } from '../src/JsonTemplate';
 
-const isEqual = require('lodash.isequal');
+const fastSafeStringify = require('fast-safe-stringify');
+const {inspect} = require('util');
 
 const array = new Array(10).fill(0).map((_, i) => i);
 const testObj2 = {
@@ -155,118 +155,106 @@ Object.defineProperty(deepCircNonCongifurableGetters, 'array', {
     configurable: false
 });
 
-suite('util.inspect', function () {
-    set('iterations', 10000);     // the number of times to run a given bench
-
-    bench('util.inspect:          simple object                 ', function () {
-        inspect(testObj, {showHidden: false, depth: null})
-    });
-    bench('util.inspect:          complex object                 ', function () {
-        inspect(testObj2, {showHidden: false, depth: null})
-    });
-    bench('util.inspect:          object arrays                ', function () {
-        inspect(testArray, {showHidden: false, depth: null})
-    });
-    bench('util.inspect:          circular                      ', function () {
-        inspect(circ, {showHidden: false, depth: null})
-    });
-    bench('util.inspect:          circular getters              ', function () {
-        inspect(circGetters, {showHidden: false, depth: null})
-    });
-    bench('util.inspect:          deep                          ', function () {
-        inspect(deep, {showHidden: false, depth: null})
-    });
-    bench('util.inspect:          deep circular                 ', function () {
-        inspect(deepCirc, {showHidden: false, depth: null})
-    });
-    bench('util.inspect:          large deep circular getters   ', function () {
-        inspect(deepCircGetters, {showHidden: false, depth: null})
-    });
-    bench('util.inspect:          deep non-conf circular getters', function () {
-        inspect(deepCircNonCongifurableGetters, {showHidden: false, depth: null})
+// Simple object
+const templateStringifyObj = new JsonTemplate(testObj);
+new Benchmark.Suite('Simple object')
+    .on('start', function () {
+        console.log('Simple object');
     })
-});
-
-suite('fast-safe-stringify', function () {
-    set('iterations', 10000);     // the number of times to run a given bench
-
-    bench('fast-safe-stringify:   simple object                 ', function () {
+    .add('utils.inspect', function () {
+        inspect(testObj, {showHidden: false, depth: null})
+    })
+    .add('JSON.stringify', function () {
+        JSON.stringify(testObj);
+    })
+    .add('fastSafeStringify', function () {
         fastSafeStringify(testObj)
-    });
-
-    bench('fast-safe-stringify:   complex object                 ', function () {
-        fastSafeStringify(testObj2)
-    });
-
-    bench('fast-safe-stringify:   object arrays                ', function () {
-        fastSafeStringify(testArray)
-    });
-    bench('fast-safe-stringify:   circular                      ', function () {
-        fastSafeStringify(circ)
-    });
-    bench('fast-safe-stringify:   circular getters              ', function () {
-        fastSafeStringify(circGetters)
-    });
-    bench('fast-safe-stringify:   deep                          ', function () {
-        fastSafeStringify(deep)
-    });
-    bench('fast-safe-stringify:   deep circular                 ', function () {
-        fastSafeStringify(deepCirc)
-    });
-    bench('fast-safe-stringify:   large deep circular getters   ', function () {
-        fastSafeStringify(deepCircGetters)
-    });
-    bench('fast-safe-stringify:   deep non-conf circular getters', function () {
-        fastSafeStringify(deepCircNonCongifurableGetters)
-    });
-});
-
-suite('templateStringify', function () {
-    set('iterations', 10000);     // the number of times to run a given bench
-
-    const templateStringifyObj = new JsonTemplate(testObj);
-    bench('template-tringify:   simple object                 ', function () {
+    })
+    .add('templateStringify', function () {
         templateStringifyObj.stringify(testObj);
-    });
+    })
+    .on('cycle', function (event: any) {
+        console.log(event.target.toString());
+    })
+    .on('complete', function (this: any) {
+        console.log(`Fastest for "${this.name}" is ${this.filter('fastest').map('name')}`);
+    })
+    .run();
 
-    const templateStringifyObj2 = new JsonTemplate(testObj2);
-    bench('templateStringify:   complex object                 ', function () {
-        templateStringifyObj2.stringify(testObj2)
-    });
+// Complex object
+const templateStringifyObj2 = new JsonTemplate(testObj2);
+new Benchmark.Suite('Complex object')
+    .on('start', function () {
+        console.log('Complex object');
+    })
+    .add('utils.inspect', function () {
+        inspect(testObj2, {showHidden: false, depth: null})
+    })
+    .add('JSON.stringify', function () {
+        JSON.stringify(testObj2);
+    })
+    .add('fastSafeStringify', function () {
+        fastSafeStringify(testObj2)
+    })
+    .add('templateStringify', function () {
+        templateStringifyObj2.stringify(testObj2);
+    })
+    .on('cycle', function (event: any) {
+        console.log(event.target.toString());
+    })
+    .on('complete', function (this: any) {
+        console.log(`Fastest for "${this.name}" is ${this.filter('fastest').map('name')}`);
+    })
+    .run();
 
-    const templateStringifyTestArray = new JsonTemplate(testArray);
-    bench('templateStringify:   object array                ', function () {
-        templateStringifyTestArray.stringify(testArray)
-    });
+// object Array
+const templateStringifyArr = new JsonTemplate(testArray);
+new Benchmark.Suite('Object array')
+    .on('start', function () {
+        console.log('Object array');
+    })
+    .add('utils.inspect', function () {
+        inspect(testArray, {showHidden: false, depth: null})
+    })
+    .add('JSON.stringify', function () {
+        JSON.stringify(testArray);
+    })
+    .add('fastSafeStringify', function () {
+        fastSafeStringify(testArray)
+    })
+    .add('templateStringify', function () {
+        templateStringifyArr.stringify(testArray);
+    })
+    .on('cycle', function (event: any) {
+        console.log(event.target.toString());
+    })
+    .on('complete', function (this: any) {
+        console.log(`Fastest for "${this.name}" is ${this.filter('fastest').map('name')}`);
+    })
+    .run();
 
-    const templateStringifyCirc = new JsonTemplate(circ);
-    bench('templateStringify:   circular                      ', function () {
-        templateStringifyCirc.stringify(circ)
-    });
-
-    const templateStringifycircGetters = new JsonTemplate(circGetters);
-    bench('templateStringify:   circular getters              ', function () {
-        templateStringifycircGetters.stringify(circGetters)
-    });
-
-    const templateStringifydeep = new JsonTemplate(deep);
-    bench('templateStringify:   deep                          ', function () {
-        templateStringifydeep.stringify(deep)
-    });
-
-    const templateStringifydeepCirc = new JsonTemplate(deepCirc);
-    bench('templateStringify:   deep circular                 ', function () {
-        templateStringifydeepCirc.stringify(deepCirc)
-    });
-
-    const templateStringifydeepCircGetters = new JsonTemplate(deepCircGetters);
-    bench('templateStringify:   large deep circular getters   ', function () {
-        templateStringifydeepCircGetters.stringify(deepCircGetters)
-    });
-
-    const templateStringifydeepCircNonCongifurableGetters = new JsonTemplate(deepCircNonCongifurableGetters);
-    bench('templateStringify:   deep non-conf circular getters', function () {
-        templateStringifydeepCircNonCongifurableGetters.stringify(deepCircNonCongifurableGetters)
-    });
-
-});
+// deep object
+const templateStringifyDeep = new JsonTemplate(deep);
+new Benchmark.Suite('Deep object')
+    .on('start', function () {
+        console.log('Deep object');
+    })
+    .add('utils.inspect', function () {
+        inspect(deep, {showHidden: false, depth: null})
+    })
+    .add('JSON.stringify', function () {
+        JSON.stringify(deep);
+    })
+    .add('fastSafeStringify', function () {
+        fastSafeStringify(deep)
+    })
+    .add('templateStringify', function () {
+        templateStringifyDeep.stringify(deep);
+    })
+    .on('cycle', function (event: any) {
+        console.log(event.target.toString());
+    })
+    .on('complete', function (this: any) {
+        console.log(`Fastest for "${this.name}" is ${this.filter('fastest').map('name')}`);
+    })
+    .run();

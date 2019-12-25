@@ -4,22 +4,24 @@
   "description": "",
   "main": "dist/JsonTemplate.ts",
   "scripts": {
-    "benchmark": "npm run build && matcha dist/spec/benchmark.js",
+    "benchmark": "npm run build && node dist/spec/benchmark.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "build": "tsc"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "benchmark": "^2.1.4"
+  },
   "devDependencies": {
-    "fast-safe-stringify": "^2.0.7",
-    "lodash.isequal": "^4.5.0",
+    "@types/benchmark": "^1.0.31",
     "@types/jasmine": "^3.5.0",
     "@types/lodash.isequal": "^4.5.5",
     "@types/node": "^12.12.17",
+    "fast-safe-stringify": "^2.0.7",
     "jasmine": "^3.5.0",
     "lodash": "^4.17.15",
-    "matcha": "^0.7.0",
+    "lodash.isequal": "^4.5.0",
     "ts-node": "^8.5.4",
     "typescript": "^3.7.3"
   }
