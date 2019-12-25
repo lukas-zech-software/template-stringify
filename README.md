@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/{ORG-or-USERNAME}/{REPO-NAME}.png?branch=master)](https://travis-ci.org/{ORG-or-USERNAME}/{REPO-NAME})
+![](https://github.com/actions/lukas-zech-software/template-stringify/Build/badge.svg)
 
 # template-stringify v0.0.1-alpha
 
