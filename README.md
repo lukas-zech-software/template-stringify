@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/{ORG-or-USERNAME}/{REPO-NAME}.png?branch=master)](https://travis-ci.org/{ORG-or-USERNAME}/{REPO-NAME})
+
 # template-stringify v0.0.1-alpha
 
 An new approach to an old problem. Serialization of JS objects
