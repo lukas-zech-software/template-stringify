@@ -69,6 +69,24 @@ const testObj = {
     aaa: true,
     foo: array
 };
+
+const testArray = [{
+    a: 1986,
+    aa: 'string1',
+    aaa: true,
+    foo: array
+}, {
+    a: 1986,
+    aa: 'string1',
+    aaa: true,
+    foo: array
+}, {
+    a: 1986,
+    aa: 'string1',
+    aaa: true,
+    foo: array
+}];
+
 const circ = JSON.parse(JSON.stringify(testObj));
 circ.id = Date.now();
 circ.o = {obj: circ, array};
@@ -146,6 +164,9 @@ suite('util.inspect', function () {
     bench('util.inspect:          complex object                 ', function () {
         inspect(testObj2, {showHidden: false, depth: null})
     });
+    bench('util.inspect:          object arrays                ', function () {
+        inspect(testArray, {showHidden: false, depth: null})
+    });
     bench('util.inspect:          circular                      ', function () {
         inspect(circ, {showHidden: false, depth: null})
     });
@@ -175,6 +196,10 @@ suite('fast-safe-stringify', function () {
 
     bench('fast-safe-stringify:   complex object                 ', function () {
         fastSafeStringify(testObj2)
+    });
+
+    bench('fast-safe-stringify:   object arrays                ', function () {
+        fastSafeStringify(testArray)
     });
     bench('fast-safe-stringify:   circular                      ', function () {
         fastSafeStringify(circ)
@@ -207,6 +232,11 @@ suite('templateStringify', function () {
     const templateStringifyObj2 = new JsonTemplate(testObj2);
     bench('templateStringify:   complex object                 ', function () {
         templateStringifyObj2.stringify(testObj2)
+    });
+
+    const templateStringifyTestArray = new JsonTemplate(testArray);
+    bench('templateStringify:   object array                ', function () {
+        templateStringifyTestArray.stringify(testArray)
     });
 
     const templateStringifyCirc = new JsonTemplate(circ);

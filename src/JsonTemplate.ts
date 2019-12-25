@@ -7,6 +7,20 @@ function getProp(obj: any, path: string, objName = 'obj'): any {
 
 }
 
+function getStringTemplate(key: string, path: string): string {
+    if (isNaN(parseInt(key)) === false) {
+        return `"\$\{${path}['${key}']\}"`;
+    }
+    return `"${key}":"\$\{${path}['${key}']\}"`;
+}
+
+function getNumberOrBooleanTemplate(key: string, path: string): string {
+    if (isNaN(parseInt(key)) === false) {
+        return `\$\{${path}['${key}']\}`;
+    }
+    return `"${key}":\$\{${path}['${key}']\}`;
+}
+
 /**
  * Inner options passed to the template constructor on recursive calls
  */
@@ -49,8 +63,7 @@ export class JsonTemplate<T> {
     private addValueArray(key: string, path: string): void {
         this.fns.push(() => {
             if (isNaN(parseInt(key)) === false) {
-                this.template += `[\$\{${path}["${key}"].join(',')\}]`;
-                return;
+                return this.template += `[\$\{${path}["${key}"].join(',')\}]`;
             }
             this.template += `"${key}":[\$\{${path}["${key}"].join(',')\}]`
         });
@@ -67,14 +80,26 @@ export class JsonTemplate<T> {
                     id,
                     basePath: basePath,
                     fn: (obj2) => {
-                        if (basePath === undefined) {
-                            throw new Error('BasePath necessary for nested objects')
+                        let data = obj2;
+
+                        // if no basePath is provided this is the root object
+                        // meaning the document root is an array
+                        if (basePath !== undefined) {
+                            data = getProp(obj2, basePath);
                         }
-                        const data = getProp(obj2, basePath);
+
 
                         return data.map((x: any, i: number) => {
+                            let type = typeof x;
+                            if (type !== 'object') {
+                                if (type === 'string') {
+                                    return `"${x}"`;
+                                }
+                                return x;
+                            }
+
                             const innerTemplate = new JsonTemplate(x, {
-                                basePath: `${basePath}[${i}]`,
+                                basePath: `${basePath || 'obj'}[${i}]`,
                                 parent,
                                 depth: this.recursiveOptions ? this.recursiveOptions.depth + 1 : 0
                             });
@@ -101,13 +126,13 @@ export class JsonTemplate<T> {
 
     private addString(key: string, path: string) {
         this.fns.push(() => {
-            return this.template += `"${key}":"\$\{${path}['${key}']\}"`;
+            return this.template += getStringTemplate(key, path);
         });
     }
 
     private addNumberOrBoolean(key: string, path: string) {
         this.fns.push(() => {
-            return this.template += `"${key}":\$\{${path}['${key}']\}`;
+            return this.template += getNumberOrBooleanTemplate(key, path);
         });
     }
 
@@ -186,11 +211,12 @@ export class JsonTemplate<T> {
 
         if (isArray) {
             this.template = '[';
+            this.addObject('', basePath || 'obj');
+
         } else {
             this.template = '{';
+            this.create(this.templateObject, basePath);
         }
-
-        this.create(this.templateObject, basePath);
 
         this.fns.forEach((fn, i) => {
             fn(this.templateObject, basePath);
@@ -208,6 +234,7 @@ export class JsonTemplate<T> {
         return this._renderFactory(this.template);
     }
 
+
     /**
      * Get the current string template
      */
@@ -222,18 +249,12 @@ export class JsonTemplate<T> {
     public stringify(obj: T) {
         let stringify = this.templateFn(obj);
 
-        const previous = [...this.afterFns];
-        this.afterFns = [];
 
-        previous.forEach(({fn, id}, i) => {
+        while (this.afterFns.length) {
+            const [{fn, id}] = this.afterFns.splice(0, 1);
             let result = fn(obj);
             stringify = stringify.replace(id, `${result}`)
-        });
-
-        this.afterFns.forEach(({fn, id}, i) => {
-            let result = fn(obj);
-            stringify = stringify.replace(id, `${result}`)
-        });
+        }
 
         return stringify;
     }

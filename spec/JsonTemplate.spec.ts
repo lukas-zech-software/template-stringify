@@ -5,34 +5,38 @@ describe("JsonTemplate", function () {
 
     describe("Primitive Values", function () {
         it("should add integer value", function () {
+            const testTemplate = {integer: 0};
             const testData = {integer: 1};
-            const template = new JsonTemplate(testData);
+            const template = new JsonTemplate(testTemplate);
             let stringify = template.stringify(testData);
             expect(stringify).toEqual('{"integer":1}');
             expect(template.parse(stringify)).toEqual(testData);
         });
 
         it("should add float value", function () {
-            const testData = {float: 1.1};
-            const template = new JsonTemplate(testData);
+            const testTemplate = {float: 1.1};
+            const testData = {float: 2.2};
+            const template = new JsonTemplate(testTemplate);
             let stringify = template.stringify(testData);
-            expect(stringify).toEqual('{"float":1.1}');
+            expect(stringify).toEqual('{"float":2.2}');
             expect(template.parse(stringify)).toEqual(testData);
         });
 
         it("should add boolean value", function () {
-            const testData = {boolean: true};
-            const template = new JsonTemplate(testData);
+            const testTemplate = {boolean: true};
+            const testData = {boolean: false};
+            const template = new JsonTemplate(testTemplate);
             let stringify = template.stringify(testData);
-            expect(stringify).toEqual('{"boolean":true}');
+            expect(stringify).toEqual('{"boolean":false}');
             expect(template.parse(stringify)).toEqual(testData);
         });
 
         it("should add string value", function () {
-            const testData = {string: 'someString'};
-            const template = new JsonTemplate(testData);
+            const testTemplate = {string: 'someString'};
+            const testData = {string: 'otherString'};
+            const template = new JsonTemplate(testTemplate);
             let stringify = template.stringify(testData);
-            expect(stringify).toEqual('{"string":"someString"}');
+            expect(stringify).toEqual('{"string":"otherString"}');
             expect(template.parse(stringify)).toEqual(testData);
         });
 
@@ -105,34 +109,56 @@ describe("JsonTemplate", function () {
 
     describe("Arrays", function () {
         it("should add primitive value array", function () {
-            const testData = {integers: [1, 2, 3]};
-            const template = new JsonTemplate(testData);
+            const testTemplate = {integers: [1, 2, 3]};
+            const testData = {integers: [4, 5, 6]};
+            const template = new JsonTemplate(testTemplate);
             let stringify = template.stringify(testData);
-            expect(stringify).toEqual('{"integers":[1,2,3]}');
+            expect(stringify).toEqual('{"integers":[4,5,6]}');
             expect(template.parse(stringify)).toEqual(testData);
         });
 
         it("should add primitive value array of arrays", function () {
+            const testTemplate = {integers: [[0]]};
             const testData = {integers: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]};
-            const template = new JsonTemplate(testData);
+            const template = new JsonTemplate(testTemplate);
             let stringify = template.stringify(testData);
             expect(stringify).toEqual('{"integers":[[1,2,3],[4,5,6],[7,8,9]]}');
             expect(template.parse(stringify)).toEqual(testData);
         });
 
         it("should add object value array", function () {
-            const testData = {objectsArray: [{simpleObject: {string: 'someString1'}}, {simpleObject: {string: 'someString2'}}, {simpleObject: {string: 'someString3'}}]};
-            const template = new JsonTemplate(testData);
+            const testTemplate = {objectsArray: [{simpleObject: {string: 'someString1'}}]};
+            const testData = {objectsArray: [{simpleObject: {string: 'otherString1'}}, {simpleObject: {string: 'otherString2'}}, {simpleObject: {string: 'otherString3'}}]};
+            const template = new JsonTemplate(testTemplate);
             let stringify = template.stringify(testData);
-            expect(stringify).toEqual('{"objectsArray":[{"simpleObject":{"string":"someString1"}},{"simpleObject":{"string":"someString2"}},{"simpleObject":{"string":"someString3"}}]}');
+            expect(stringify).toEqual('{"objectsArray":[{"simpleObject":{"string":"otherString1"}},{"simpleObject":{"string":"otherString2"}},{"simpleObject":{"string":"otherString3"}}]}');
             expect(template.parse(stringify)).toEqual(testData);
         });
 
         it("should add object value array of object with arrays of objects", function () {
-            const testData = {objectsArray: [{simpleObject: {nestedObjectsArray: [{string: 'nestedString1'}, {string: 'nestedString2'}]}}]};
-            const template = new JsonTemplate(testData);
+            const testTemplate = {objectsArray: [{simpleObject: {nestedObjectsArray: [{string: 'someString1'}]}}]};
+            const testData = {objectsArray: [{simpleObject: {nestedObjectsArray: [{string: 'otherString1'}, {string: 'otherString2'}]}}]};
+            const template = new JsonTemplate(testTemplate);
             let stringify = template.stringify(testData);
-            expect(stringify).toEqual('{"objectsArray":[{"simpleObject":{"nestedObjectsArray":[{"string":"nestedString1"},{"string":"nestedString2"}]}}]}');
+            expect(stringify).toEqual('{"objectsArray":[{"simpleObject":{"nestedObjectsArray":[{"string":"otherString1"},{"string":"otherString2"}]}}]}');
+            expect(template.parse(stringify)).toEqual(testData);
+        });
+
+        it("should add array as root element with nested primitive values", function () {
+            const testTemplate = ["someString1"];
+            const testData = ["otherString1", "otherString2", "otherString2"];
+            const template = new JsonTemplate(testTemplate);
+            let stringify = template.stringify(testData);
+            expect(stringify).toEqual('["otherString1","otherString2","otherString2"]');
+            expect(template.parse(stringify)).toEqual(testData);
+        });
+
+        it("should add array as root element with nested objects", function () {
+            const testTemplate = [{string: "someString1"}];
+            const testData = [{string: "otherString1"}, {string: "otherString2"}, {string: "otherString2"}];
+            const template = new JsonTemplate(testTemplate);
+            let stringify = template.stringify(testData);
+            expect(stringify).toEqual('[{"string":"otherString1"},{"string":"otherString2"},{"string":"otherString2"}]');
             expect(template.parse(stringify)).toEqual(testData);
         });
     });
@@ -151,6 +177,12 @@ describe("JsonTemplate", function () {
             const template = new JsonTemplate(testTemplateData);
             let stringify = template.stringify(testActualData);
             expect(template.parse(stringify)).toEqual(testActualData);
+        });
+
+        it("should work on complex arrays", function () {
+            const template = new JsonTemplate([testTemplateData]);
+            let stringify = template.stringify([testActualData, testActualData, testActualData, testActualData]);
+            expect(template.parse(stringify)).toEqual([testActualData, testActualData, testActualData, testActualData]);
         });
     });
 });
