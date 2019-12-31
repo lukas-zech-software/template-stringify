@@ -3,6 +3,7 @@ import { JsonTemplate } from '../src/JsonTemplate';
 
 const fastSafeStringify = require('fast-safe-stringify');
 const {inspect} = require('util');
+const jsonStrify = require('json-strify')();
 
 const array = new Array(10).fill(0).map((_, i) => i);
 const testObj2 = {
@@ -70,22 +71,7 @@ const testObj = {
     foo: array
 };
 
-const testArray = [{
-    a: 1986,
-    aa: 'string1',
-    aaa: true,
-    foo: array
-}, {
-    a: 1986,
-    aa: 'string1',
-    aaa: true,
-    foo: array
-}, {
-    a: 1986,
-    aa: 'string1',
-    aaa: true,
-    foo: array
-}];
+const testArray = [testObj2,testObj2,testObj2,];
 
 const circ = JSON.parse(JSON.stringify(testObj));
 circ.id = Date.now();
@@ -170,6 +156,9 @@ new Benchmark.Suite('Simple object')
     .add('fastSafeStringify', function () {
         fastSafeStringify(testObj)
     })
+    .add('jsonStrify', function () {
+        jsonStrify(testObj)
+    })
     .add('templateStringify', function () {
         templateStringifyObj.stringify(testObj);
     })
@@ -195,6 +184,9 @@ new Benchmark.Suite('Complex object')
     })
     .add('fastSafeStringify', function () {
         fastSafeStringify(testObj2)
+    })
+    .add('jsonStrify', function () {
+        jsonStrify(testObj2)
     })
     .add('templateStringify', function () {
         templateStringifyObj2.stringify(testObj2);
@@ -222,6 +214,9 @@ new Benchmark.Suite('Object array')
     .add('fastSafeStringify', function () {
         fastSafeStringify(testArray)
     })
+    .add('jsonStrify', function () {
+        jsonStrify(testArray)
+    })
     .add('templateStringify', function () {
         templateStringifyArr.stringify(testArray);
     })
@@ -247,6 +242,9 @@ new Benchmark.Suite('Deep object')
     })
     .add('fastSafeStringify', function () {
         fastSafeStringify(deep)
+    })
+   .add('jsonStrify', function () {
+        jsonStrify(deep)
     })
     .add('templateStringify', function () {
         templateStringifyDeep.stringify(deep);

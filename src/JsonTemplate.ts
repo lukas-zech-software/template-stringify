@@ -206,6 +206,11 @@ export class JsonTemplate<T> {
     }
 
     private build(): TemplateFunction<T> {
+        // use native implementation for string an number
+        if (typeof this.templateObject === 'string' || typeof this.templateObject === 'number') {
+            return JSON.stringify
+        }
+
         const isArray = Array.isArray(this.templateObject);
         const basePath = this.recursiveOptions ? this.recursiveOptions.basePath : undefined
 

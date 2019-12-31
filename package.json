@@ -5,6 +5,7 @@
   "main": "dist/JsonTemplate.ts",
   "scripts": {
     "benchmark": "npm run build && node dist/spec/benchmark.js",
+    "benchmark2": "npm run build && node dist/spec/benchmark2.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "build": "tsc"
   },
@@ -18,11 +19,15 @@
     "@types/jasmine": "^3.5.0",
     "@types/lodash.isequal": "^4.5.5",
     "@types/node": "^12.12.17",
+    "compile-json-stringify": "^0.1.2",
+    "fast-json-stringify": "^1.16.0",
     "fast-safe-stringify": "^2.0.7",
     "jasmine": "^3.5.0",
+    "json-strify": "^0.1.7",
     "lodash": "^4.17.15",
     "lodash.isequal": "^4.5.0",
     "ts-node": "^8.5.4",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.3",
+    "uglify-es": "^3.3.9"
   }
 }

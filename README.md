@@ -4,38 +4,35 @@
 
 An new approach to an old problem. Serialization of JS objects
 
-This library is faster than other libraries
-* up to 110x times faster than [utils.inspect](https://nodejs.org/api/util.html#util_util_inspect_object_options)
-* up to 30x times faster than [fast-safe-stringify](https://www.npmjs.com/package/fast-safe-stringify)
-
 ```bash
 Example benchmark on MacBook Pro (15-inch, 2017) 3,1 GHz Intel Core i7
-Simple object
-utils.inspect x     291,783 ops/sec ±3.19% (79 runs sampled)
-JSON.stringify x    828,393 ops/sec ±10.54% (73 runs sampled)
-fastSafeStringify x 687,957 ops/sec ±8.17% (75 runs sampled)
-templateStringify x 2,782,517 ops/sec ±1.83% (89 runs sampled)
-Fastest for "Simple object" is templateStringify
-
+imple object
+utils.inspect     x 334,038 ops/sec ±1.29% (88 runs sampled)
+JSON.stringify    x 1,083,229 ops/sec ±0.73% (95 runs sampled)
+fastSafeStringify x 884,582 ops/sec ±0.79% (93 runs sampled)
+jsonStrify        x 80,779,773 ops/sec ±0.54% (95 runs sampled)
+templateStringify x 2,991,049 ops/sec ±0.87% (96 runs sampled)
+Fastest for "Simple object" is jsonStrify
 Complex object
-utils.inspect x     32,397 ops/sec ±0.51% (93 runs sampled)
-JSON.stringify x    161,784 ops/sec ±0.73% (93 runs sampled)
-fastSafeStringify x 127,159 ops/sec ±1.15% (94 runs sampled)
-templateStringify x 3,845,886 ops/sec ±1.43% (92 runs sampled)
-Fastest for "Complex object" is templateStringify
-
+utils.inspect     x 33,721 ops/sec ±1.08% (94 runs sampled)
+JSON.stringify    x 164,144 ops/sec ±0.65% (93 runs sampled)
+fastSafeStringify x 129,162 ops/sec ±0.63% (93 runs sampled)
+jsonStrify        x 80,082,387 ops/sec ±0.53% (93 runs sampled)
+templateStringify x 4,064,185 ops/sec ±0.69% (95 runs sampled)
+Fastest for "Complex object" is jsonStrify
 Object array
-utils.inspect x     95,573 ops/sec ±0.49% (86 runs sampled)
-JSON.stringify x    393,325 ops/sec ±1.06% (91 runs sampled)
-fastSafeStringify x 327,904 ops/sec ±0.86% (94 runs sampled)
-templateStringify x 95,214,894 ops/sec ±0.45% (90 runs sampled)
+utils.inspect     x 10,904 ops/sec ±1.17% (94 runs sampled)
+JSON.stringify    x 56,599 ops/sec ±0.57% (92 runs sampled)
+fastSafeStringify x 44,526 ops/sec ±0.63% (92 runs sampled)
+jsonStrify        x 79,260,752 ops/sec ±0.58% (91 runs sampled)
+templateStringify x 98,046,601 ops/sec ±0.51% (92 runs sampled)
 Fastest for "Object array" is templateStringify
 
 Deep object
-utils.inspect x     20,514 ops/sec ±0.73% (95 runs sampled)
-JSON.stringify x    74,346 ops/sec ±0.95% (92 runs sampled)
-fastSafeStringify x 59,594 ops/sec ±0.37% (97 runs sampled)
-templateStringify x 453,741 ops/sec ±0.71% (90 runs sampled)
+utils.inspect     x 17,558 ops/sec ±0.65% (96 runs sampled)
+JSON.stringify    x 63,036 ops/sec ±0.68% (93 runs sampled)
+fastSafeStringify x 50,384 ops/sec ±0.64% (92 runs sampled)
+templateStringify x 390,228 ops/sec ±0.75% (93 runs sampled)
 Fastest for "Deep object" is templateStringify
 ```
 
