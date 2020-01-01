@@ -5,8 +5,20 @@ const fastSafeStringify = require('fast-safe-stringify');
 const {inspect} = require('util');
 const jsonStrify = require('json-strify')();
 
-const array = new Array(10).fill(0).map((_, i) => i);
-const testObj2 = {
+function rndNumber(): number {
+    return Math.random();
+}
+
+function rndString(): string {
+    return Math.random().toString(36).substring(7);
+}
+
+function rndBool(): boolean {
+    return Date.now() % 1 === 0;
+}
+
+const array = new Array(10).fill(0).map((_, i) => i + 'xx');
+const complexObjects:any = [{
     a: 1986,
     aa: 'string1',
     b: {
@@ -62,21 +74,120 @@ const testObj2 = {
             ]
         }
     },
-};
+}];
 
-const testObj = {
+function generateTestComplexObjects() {
+    complexObjects.push({
+        a: rndNumber(),
+        aa: rndString(),
+        b: {
+            bb1: rndBool(), bb2: rndString(),
+            bb3: {
+                bbb1: rndBool(),
+                bbb2: rndString()
+            }
+        },
+        c: [rndNumber(), rndNumber(), rndNumber()],
+        c2: [
+            {
+                cc2: 'foo', cc3: rndNumber(), cc4: rndBool(),
+                array1: [rndNumber(), rndNumber(), rndNumber()],
+
+                ooo: {
+                    ooo9: rndString(),
+                    ooo1: rndNumber(),
+                    ooo2: rndBool(),
+                    xxx: {yyy: rndNumber(), ggg: [{hhh: rndString()}, {hhh: rndString()}]}
+                }
+
+            },
+            {
+                cc2: rndString(), cc3: rndNumber(), cc4: rndBool(),
+                array1: [rndNumber(), rndNumber(), rndNumber(), rndNumber(), rndNumber()],
+
+                ooo: {
+                    ooo9: rndString(),
+                    ooo1: rndNumber(),
+                    ooo2: null,
+                    xxx: {yyy: rndNumber(), ggg: [{hhh: rndString()}]}
+                }
+
+            },
+            {
+                cc2: rndString(), cc3: rndNumber(), cc4: null,
+                array1: [rndNumber()],
+
+                ooo: {
+                    ooo9: rndString(),
+                    ooo1: rndNumber(),
+                    ooo2: rndBool(),
+                    xxx: {yyy: rndNumber(), ggg: [{hhh: rndString()}, {hhh: rndString()}, {hhh: rndString()}]}
+                }
+
+            }
+        ],
+        d: [
+            {dd1: rndString(), dd2: null},
+            {dd1: '', dd2: rndBool()},
+        ],
+        e: {
+            ee1: [
+                {eee1: rndNumber()},
+                {eee1: rndNumber()},
+            ],
+            ee2: {
+                eee2: [
+                    {eeee2: rndNumber()},
+                    {eeee2: rndNumber()},
+                    {eeee2: rndNumber()},
+                ]
+            }
+        },
+    });
+}
+
+new Array(100).fill(0).forEach(generateTestComplexObjects);
+addGetter(complexObjects);
+
+let simpleObjects: any = [{
     a: 1986,
     aa: 'string1',
     aaa: true,
     foo: array
-};
+}];
 
-const testArray = [testObj2,testObj2,testObj2,];
+function generateTestSimpleObjects() {
+    simpleObjects.push({
+        a: rndString(),
+        aa: rndString(),
+        aaa: rndBool(),
+        foo: new Array(10).fill(0).map(rndString)
+    });
+}
 
-const circ = JSON.parse(JSON.stringify(testObj));
+new Array(100).fill(0).forEach(generateTestSimpleObjects);
+addGetter(simpleObjects)
+
+function addGetter(obj: any) {
+    obj.index = 0;
+    Object.defineProperty(obj, 'current', {
+        get: () => {
+            if (obj.index === obj.length - 1) {
+                obj.index = 0
+            } else {
+                obj.index++;
+            }
+            return obj[obj.index];
+        },
+        enumerable: true,
+        configurable: false
+    });
+}
+
+const circ = JSON.parse(JSON.stringify(simpleObjects[0]));
 circ.id = Date.now();
 circ.o = {obj: circ, array};
-const circGetters = JSON.parse(JSON.stringify(testObj));
+const circGetters = JSON.parse(JSON.stringify(simpleObjects[0]));
 Object.assign(circGetters, {
     get o() {
         return {obj: circGetters, array};
@@ -141,26 +252,27 @@ Object.defineProperty(deepCircNonCongifurableGetters, 'array', {
     configurable: false
 });
 
+
 // Simple object
-const templateStringifyObj = new JsonTemplate(testObj);
+const templateStringifyObj = new JsonTemplate(simpleObjects[0]);
 new Benchmark.Suite('Simple object')
     .on('start', function () {
         console.log('Simple object');
     })
     .add('utils.inspect', function () {
-        inspect(testObj, {showHidden: false, depth: null})
+        inspect(simpleObjects.current, {showHidden: false, depth: null})
     })
     .add('JSON.stringify', function () {
-        JSON.stringify(testObj);
+        JSON.stringify(simpleObjects.current);
     })
     .add('fastSafeStringify', function () {
-        fastSafeStringify(testObj)
+        fastSafeStringify(simpleObjects.current)
     })
     .add('jsonStrify', function () {
-        jsonStrify(testObj)
+        jsonStrify(simpleObjects.current)
     })
     .add('templateStringify', function () {
-        templateStringifyObj.stringify(testObj);
+        templateStringifyObj.stringify(simpleObjects.current);
     })
     .on('cycle', function (event: any) {
         console.log(event.target.toString());
@@ -171,25 +283,25 @@ new Benchmark.Suite('Simple object')
     .run();
 
 // Complex object
-const templateStringifyObj2 = new JsonTemplate(testObj2);
+const templateStringifyObj2 = new JsonTemplate(complexObjects[0]);
 new Benchmark.Suite('Complex object')
     .on('start', function () {
         console.log('Complex object');
     })
     .add('utils.inspect', function () {
-        inspect(testObj2, {showHidden: false, depth: null})
+        inspect(complexObjects.current, {showHidden: false, depth: null})
     })
     .add('JSON.stringify', function () {
-        JSON.stringify(testObj2);
+        JSON.stringify(complexObjects.current);
     })
     .add('fastSafeStringify', function () {
-        fastSafeStringify(testObj2)
+        fastSafeStringify(complexObjects.current)
     })
     .add('jsonStrify', function () {
-        jsonStrify(testObj2)
+        jsonStrify(complexObjects.current)
     })
     .add('templateStringify', function () {
-        templateStringifyObj2.stringify(testObj2);
+        templateStringifyObj2.stringify(complexObjects.current);
     })
     .on('cycle', function (event: any) {
         console.log(event.target.toString());
@@ -200,25 +312,25 @@ new Benchmark.Suite('Complex object')
     .run();
 
 // object Array
-const templateStringifyArr = new JsonTemplate(testArray);
+const templateStringifyArr = new JsonTemplate(complexObjects);
 new Benchmark.Suite('Object array')
     .on('start', function () {
         console.log('Object array');
     })
     .add('utils.inspect', function () {
-        inspect(testArray, {showHidden: false, depth: null})
+        inspect(complexObjects, {showHidden: false, depth: null})
     })
     .add('JSON.stringify', function () {
-        JSON.stringify(testArray);
+        JSON.stringify(complexObjects);
     })
     .add('fastSafeStringify', function () {
-        fastSafeStringify(testArray)
+        fastSafeStringify(complexObjects)
     })
     .add('jsonStrify', function () {
-        jsonStrify(testArray)
+        jsonStrify(complexObjects)
     })
     .add('templateStringify', function () {
-        templateStringifyArr.stringify(testArray);
+        templateStringifyArr.stringify(complexObjects);
     })
     .on('cycle', function (event: any) {
         console.log(event.target.toString());
@@ -243,9 +355,6 @@ new Benchmark.Suite('Deep object')
     .add('fastSafeStringify', function () {
         fastSafeStringify(deep)
     })
-   .add('jsonStrify', function () {
-        jsonStrify(deep)
-    })
     .add('templateStringify', function () {
         templateStringifyDeep.stringify(deep);
     })
@@ -256,3 +365,4 @@ new Benchmark.Suite('Deep object')
         console.log(`Fastest for "${this.name}" is ${this.filter('fastest').map('name')}`);
     })
     .run();
+

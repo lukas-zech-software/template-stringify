@@ -202,7 +202,7 @@ export class JsonTemplate<T> {
 
     private _renderFactory(str: string): (obj: T) => string {
         let args = `return \`${str}\`;`;
-        return new Function(...['obj', 'JsonTemplate'], args) as (obj: T) => string;
+        return new Function(...['obj'], args) as (obj: T) => string;
     }
 
     private build(): TemplateFunction<T> {
@@ -252,16 +252,15 @@ export class JsonTemplate<T> {
      * @param obj
      */
     public stringify(obj: T) {
-        let stringify = this.templateFn(obj);
+        return this.templateFn(obj);
 
-
-        while (this.afterFns.length) {
+        /*while (this.afterFns.length) {
             const [{fn, id}] = this.afterFns.splice(0, 1);
             let result = fn(obj);
             stringify = stringify.replace(id, `${result}`)
         }
 
-        return stringify;
+        return stringify;*/
     }
 
     /**
@@ -276,4 +275,15 @@ export class JsonTemplate<T> {
         return JSON.parse(str);
     }
 
+}
+
+
+const a = {
+    a: 1,
+    b: 'foo',
+    c: true,
+};
+
+function stringifyA<T>(obj: any): string {
+    return `{a:${obj.a}}`
 }
